@@ -10,5 +10,10 @@ public class SecurityController {
 	public String index() {
 		return "home";
 	}
+	
+	@GetMapping("loginPage")
+	public String loginPage() {
+		return "loginPage";	//실제 페이지를 구현하게 된다.
+	}
 
 }
