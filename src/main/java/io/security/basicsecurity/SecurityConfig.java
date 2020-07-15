@@ -5,6 +5,7 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +15,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 @Configuration
 @EnableWebSecurity //웹 보안 활성화 : 여러 보안설정 클래스를 import하는 어노테이션
@@ -26,32 +29,54 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.authorizeRequests()
 				.anyRequest().authenticated();
 		http
-				.formLogin()					
-				.loginPage("/loginPage") 								//사용자 정의 로그인 페이지
-				.defaultSuccessUrl("/")									//로그인 성공 후 이동 페이지
-				.failureUrl("/login")									//로그인 실패 후 이동 페이지
-				.usernameParameter("userId")							//아이디 파라미터명 설정
-				.passwordParameter("passwd")							//패스워드 파라미터명 설정
-				.loginProcessingUrl("/login_proc")						//로그인 Form Action Url
-				.successHandler(new AuthenticationSuccessHandler() {	//로그인 성공 후 핸들러
+				.formLogin();					
+//				.loginPage("/loginPage") 								//사용자 정의 로그인 페이지
+//				.defaultSuccessUrl("/")									//로그인 성공 후 이동 페이지
+//				.failureUrl("/login")									//로그인 실패 후 이동 페이지
+//				.usernameParameter("userId")							//아이디 파라미터명 설정
+//				.passwordParameter("passwd")							//패스워드 파라미터명 설정
+//				.loginProcessingUrl("/login_proc")						//로그인 Form Action Url
+//				.successHandler(new AuthenticationSuccessHandler() {	//로그인 성공 후 핸들러
+//					@Override
+//					public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+//							Authentication authentication) throws IOException, ServletException {
+//						System.out.println("authentication --" + authentication.getName());
+//						response.sendRedirect("/");
+//					}
+//				})
+//				.failureHandler(new AuthenticationFailureHandler() {	//로그인 실패 후 핸들러
+//					@Override
+//					public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+//							AuthenticationException exception) throws IOException, ServletException {
+//						System.out.println("exception --"+exception.getMessage());
+//						response.sendRedirect("/login");
+//					}
+//				})
+//				.permitAll() //loginPage는 인증하지 않아도 접근이 가능해야함
+	
+		http
+				.logout()
+				.logoutUrl("/logout")
+				.logoutSuccessUrl("/login")
+				.addLogoutHandler(new LogoutHandler() {
+					
 					@Override
-					public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-							Authentication authentication) throws IOException, ServletException {
-						System.out.println("authentication --" + authentication.getName());
-						response.sendRedirect("/");
+					public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+						HttpSession session = request.getSession();
+						session.invalidate();
 					}
 				})
-				.failureHandler(new AuthenticationFailureHandler() {	//로그인 실패 후 핸들러
+				.logoutSuccessHandler(new LogoutSuccessHandler() {
+					
 					@Override
-					public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-							AuthenticationException exception) throws IOException, ServletException {
-						System.out.println("exception --"+exception.getMessage());
+					public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+							throws IOException, ServletException {
 						response.sendRedirect("/login");
 					}
 				})
-				.permitAll() //loginPage는 인증하지 않아도 접근이 가능해야함
-		;
-	
+				.deleteCookies("remember-me")
+				;
+		
 	}
 
 }
